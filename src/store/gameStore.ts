@@ -9,7 +9,14 @@ import {
   MatchSummary,
   runFullMatch,
 } from '../core/matchSimulator';
-import { GameState, NormalizedTeams, ParsedTeam, RawCsvRow, TunableGameConfig, TurnEvent } from '../core/types';
+import {
+  createDefaultCommandDraft,
+  createLocalPlayerTeam,
+  getNextSecretEntryPhase,
+  SecretEntryPhase,
+  setDraftCommand,
+} from '../core/localCommandEntry';
+import { Command, GameState, NormalizedTeams, ParsedTeam, RawCsvRow, TunableGameConfig, TurnEvent } from '../core/types';
 import { runSingleTurn } from '../core/gameEngine';
 import { parseCsvProgressively } from '../core/csvParser';
 import { GAME_SYSTEM_CONSTANTS } from '../core/constants';
@@ -30,12 +37,20 @@ interface GameStore {
   selectedTeamAIndex: number;
   selectedTeamBIndex: number;
   matchSummary: MatchSummary;
+  secretEntryPhase: SecretEntryPhase;
+  secretDraftCommands: Command[];
+  secretPlayerA: ParsedTeam | null;
+  secretPlayerB: ParsedTeam | null;
   importCsvData: (rawRows: RawCsvRow[]) => Promise<void>;
   getImportedTeams: () => ParsedTeam[];
   loadSampleTeams: () => void;
   selectTeamA: (index: number) => void;
   selectTeamB: (index: number) => void;
   selectMatchMode: (mode: MatchMode) => void;
+  updateSecretDraftCommand: (index: number, command: Command) => void;
+  confirmSecretEntryPlayer: () => void;
+  startSecretEntryMatch: () => void;
+  resetSecretEntry: () => void;
   startMatch: () => void;
   stepNextTurn: () => void;
   runCurrentMatchToEnd: () => void;
@@ -97,6 +112,24 @@ const buildStartedState = (
   };
 };
 
+const buildLocalStartedState = (
+  config: TunableGameConfig,
+  teamA: ParsedTeam,
+  teamB: ParsedTeam,
+  matchMode: MatchMode
+) => {
+  const modeConfig = MATCH_MODE_CONFIGS[matchMode];
+  const gameState = createGameStateForMatch(teamA, teamB, modeConfig);
+
+  return {
+    config: createConfigForMode(config, modeConfig),
+    gameState,
+    latestTurnEvent: null,
+    latestTimeline: [],
+    matchSummary: createMatchSummary(gameState, modeConfig),
+  };
+};
+
 const initialGameState = createInitialGameState(GAME_SYSTEM_CONSTANTS.DEFAULT_MAX_HP);
 
 export const useGameStore = create<GameStore>()(
@@ -114,6 +147,10 @@ export const useGameStore = create<GameStore>()(
       selectedTeamAIndex: 0,
       selectedTeamBIndex: 1,
       matchSummary: createDefaultSummary(initialGameState),
+      secretEntryPhase: 'PLAYER_A_INPUT',
+      secretDraftCommands: createDefaultCommandDraft(),
+      secretPlayerA: null,
+      secretPlayerB: null,
       importCsvData: async (rawRows) => {
         set({ totalTeamsCount: rawRows.length, isStreamingLoading: true, normalizedTeams: emptyNormalizedTeams, teamsLoadedCount: 0 }, false, 'csv/start');
         const pipeline = parseCsvProgressively(rawRows, (chunkTeams) =>
@@ -138,6 +175,35 @@ export const useGameStore = create<GameStore>()(
           matchMode: mode,
           ...buildStartedState(store.config, store.normalizedTeams, store.selectedTeamAIndex, store.selectedTeamBIndex, mode),
         }), false, 'match/select_mode'),
+      updateSecretDraftCommand: (index, command) =>
+        set((store) => ({ secretDraftCommands: setDraftCommand(store.secretDraftCommands, index, command) }), false, 'secret_entry/update_command'),
+      confirmSecretEntryPlayer: () =>
+        set((store) => {
+          const teamName = store.secretEntryPhase === 'PLAYER_A_INPUT' ? 'Local Player A' : 'Local Player B';
+          const submittedTeam = createLocalPlayerTeam(teamName, store.secretDraftCommands);
+
+          return {
+            secretEntryPhase: getNextSecretEntryPhase(store.secretEntryPhase),
+            secretDraftCommands: createDefaultCommandDraft(MATCH_MODE_CONFIGS[store.matchMode].maxTurns),
+            secretPlayerA: store.secretEntryPhase === 'PLAYER_A_INPUT' ? submittedTeam : store.secretPlayerA,
+            secretPlayerB: store.secretEntryPhase === 'PLAYER_B_INPUT' ? submittedTeam : store.secretPlayerB,
+          };
+        }, false, 'secret_entry/confirm_player'),
+      startSecretEntryMatch: () =>
+        set((store) => {
+          if (store.secretPlayerA === null || store.secretPlayerB === null) {
+            return {};
+          }
+
+          return buildLocalStartedState(store.config, store.secretPlayerA, store.secretPlayerB, store.matchMode);
+        }, false, 'secret_entry/start_match'),
+      resetSecretEntry: () =>
+        set({
+          secretEntryPhase: 'PLAYER_A_INPUT',
+          secretDraftCommands: createDefaultCommandDraft(),
+          secretPlayerA: null,
+          secretPlayerB: null,
+        }, false, 'secret_entry/reset'),
       startMatch: () =>
         set((store) => buildStartedState(store.config, store.normalizedTeams, store.selectedTeamAIndex, store.selectedTeamBIndex, store.matchMode), false, 'match/start'),
       stepNextTurn: () =>
