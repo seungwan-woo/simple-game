@@ -22,6 +22,27 @@ Code Striker is a static web SPA for turn-based command battle simulation. It ta
 - Block and throw preserve charge.
 - Being hit while charging does not destroy charge.
 
+## Local 2-Player Secret Entry
+
+The local two-player flow supports offline play on one shared browser.
+
+1. Player A selects every command slot.
+2. Player A confirms the queue.
+3. Player A's commands are masked on screen.
+4. Player B selects every command slot.
+5. Player B confirms the queue.
+6. Both queues are locked and the local match can start.
+
+The UI intentionally masks submitted commands with placeholder bullets so players can share one screen without revealing the first player's strategy.
+
+## Auto Play
+
+The playable MVP supports auto play:
+
+- Auto play advances one turn every 2 seconds.
+- Auto play stops automatically when the match is finished.
+- Manual `Run Full Match` stops auto play first and then resolves the remaining match immediately.
+
 ## Match Modes
 
 Code Striker supports three match modes.
@@ -45,7 +66,7 @@ Code Striker supports three match modes.
 ## Architecture
 
 ```text
-CSV / Sample Input
+Preset Teams / Secret Local Input / CSV Input
   -> ParsedTeam[]
   -> Zustand Store
   -> Match Mode Config
@@ -62,9 +83,11 @@ CSV / Sample Input
 
 The playable MVP provides:
 
-- Team A / Team B selection
+- Local 2-player secret command entry
+- Team A / Team B preset selection
 - Match mode selection
 - Start Match / Next Turn / Run Full Match / Reset controls
+- 2-second Auto Play
 - Dual-layer HP bar
 - Command queue visualization
 - Latest turn event panel
@@ -78,6 +101,7 @@ The playable MVP provides:
 | Modifiability | Semantic outcomes and match modes separate rule meaning from damage policy. |
 | Replayability | TurnEvent log enables deterministic replay. |
 | UX extensibility | Timeline events separate logical time from render time. |
+| Local playability | Secret command entry enables two players to play on one shared browser. |
 | Deployability | Vite base path and GitHub Pages workflow are included. |
 
 ## GitHub Pages
