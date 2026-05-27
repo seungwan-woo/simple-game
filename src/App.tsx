@@ -4,6 +4,7 @@ import { PlayerPanel } from './components/PlayerPanel';
 import { ReplayLog } from './components/ReplayLog';
 import { TurnEventPanel } from './components/TurnEventPanel';
 import { MATCH_MODE_CONFIGS } from './core/matchSimulator';
+import { sampleTeams } from './data/sampleTeams';
 import { useGameStore } from './store/gameStore';
 
 export const App = () => {
@@ -24,9 +25,9 @@ export const App = () => {
     runCurrentMatchToEnd,
   } = useGameStore();
 
-  const teams = getImportedTeams();
-  const selectedTeamA = teams[selectedTeamAIndex] ?? teams[0];
-  const selectedTeamB = teams[selectedTeamBIndex] ?? teams[1] ?? teams[0];
+  const teams = getImportedTeams().length > 0 ? getImportedTeams() : sampleTeams;
+  const selectedTeamA = teams[selectedTeamAIndex] ?? sampleTeams[0];
+  const selectedTeamB = teams[selectedTeamBIndex] ?? sampleTeams[1] ?? sampleTeams[0];
   const modeConfig = MATCH_MODE_CONFIGS[matchMode];
 
   return (
