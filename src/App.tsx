@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CommandQueue } from './components/CommandQueue';
+import { CsvImportPanel } from './components/CsvImportPanel';
 import { MatchControls } from './components/MatchControls';
 import { PlayerPanel } from './components/PlayerPanel';
 import { ReplayLog } from './components/ReplayLog';
@@ -31,6 +32,9 @@ export const App = () => {
   const {
     gameState,
     normalizedTeams,
+    teamsLoadedCount,
+    totalTeamsCount,
+    isStreamingLoading,
     selectedTeamAIndex,
     selectedTeamBIndex,
     activeTeamA,
@@ -42,6 +46,7 @@ export const App = () => {
     secretDraftCommands,
     secretPlayerA,
     secretPlayerB,
+    importCsvData,
     getImportedTeams,
     selectTeamA,
     selectTeamB,
@@ -92,15 +97,27 @@ export const App = () => {
     startMatch();
   };
 
+  const handleImportCsv = async (...args: Parameters<typeof importCsvData>) => {
+    setIsAutoPlaying(false);
+    await importCsvData(...args);
+  };
+
   return (
     <main className="shell">
       <section className="hero">
         <p className="eyebrow">Code Striker</p>
         <h1>Playable command battle MVP</h1>
         <p>
-          Choose preset teams or use local 2-player secret entry. Then step manually, run full match, or auto play every two seconds.
+          Choose preset teams, import CSV teams, or use local 2-player secret entry. Then step manually, run full match, or auto play every two seconds.
         </p>
       </section>
+
+      <CsvImportPanel
+        isLoading={isStreamingLoading}
+        loadedCount={teamsLoadedCount}
+        totalCount={totalTeamsCount}
+        onImportRows={handleImportCsv}
+      />
 
       <SecretCommandEntryPanel
         phase={secretEntryPhase}
