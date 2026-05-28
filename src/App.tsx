@@ -5,11 +5,26 @@ import { PlayerPanel } from './components/PlayerPanel';
 import { ReplayLog } from './components/ReplayLog';
 import { SecretCommandEntryPanel } from './components/SecretCommandEntryPanel';
 import { TurnEventPanel } from './components/TurnEventPanel';
-import { MATCH_MODE_CONFIGS } from './core/matchSimulator';
+import { GAME_SYSTEM_CONSTANTS } from './core/constants';
+import { MATCH_MODE_CONFIGS, MatchWinner } from './core/matchSimulator';
 import { sampleTeams } from './data/sampleTeams';
 import { useGameStore } from './store/gameStore';
 
 const AUTO_PLAY_INTERVAL_MS = 2000;
+const INPUT_SLOT_COUNT = GAME_SYSTEM_CONSTANTS.DEFAULT_TOTAL_COMMAND_SLOTS;
+
+const winnerLabel = (winner: MatchWinner): string => {
+  switch (winner) {
+    case 'A':
+      return '🏆 Player A Wins';
+    case 'B':
+      return '🏆 Player B Wins';
+    case 'DRAW':
+      return '🤝 Draw';
+    case 'UNDECIDED':
+      return 'Battle in progress';
+  }
+};
 
 export const App = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
@@ -18,6 +33,8 @@ export const App = () => {
     normalizedTeams,
     selectedTeamAIndex,
     selectedTeamBIndex,
+    activeTeamA,
+    activeTeamB,
     matchMode,
     matchSummary,
     latestTurnEvent,
@@ -57,9 +74,8 @@ export const App = () => {
   }, [matchSummary.isFinished]);
 
   const teams = getImportedTeams().length > 0 ? getImportedTeams() : sampleTeams;
-  const selectedTeamA = teams[selectedTeamAIndex] ?? sampleTeams[0];
-  const selectedTeamB = teams[selectedTeamBIndex] ?? sampleTeams[1] ?? sampleTeams[0];
   const modeConfig = MATCH_MODE_CONFIGS[matchMode];
+  const displayWinner = matchSummary.isFinished ? winnerLabel(matchSummary.winner) : winnerLabel('UNDECIDED');
 
   const handleRunFullMatch = () => {
     setIsAutoPlaying(false);
@@ -88,7 +104,7 @@ export const App = () => {
 
       <SecretCommandEntryPanel
         phase={secretEntryPhase}
-        slotCount={modeConfig.maxTurns}
+        slotCount={INPUT_SLOT_COUNT}
         draftCommands={secretDraftCommands}
         playerA={secretPlayerA}
         playerB={secretPlayerB}
@@ -113,6 +129,14 @@ export const App = () => {
         onReset={handleStartPresetMatch}
       />
 
+      <section className={`winner-banner ${matchSummary.isFinished ? 'finished' : ''}`}>
+        <p className="eyebrow">Match Result</p>
+        <h2>{displayWinner}</h2>
+        <p>
+          Player A {matchSummary.finalHpA} energy / Player B {matchSummary.finalHpB} energy · {matchSummary.totalTurns} turns played
+        </p>
+      </section>
+
       <section className="panel auto-play-panel">
         <div>
           <p className="eyebrow">Auto Play</p>
@@ -135,7 +159,7 @@ export const App = () => {
         </div>
         <div>
           <span>Winner</span>
-          <strong>{matchSummary.winner}</strong>
+          <strong>{displayWinner}</strong>
         </div>
         <div>
           <span>Loaded Teams</span>
@@ -144,18 +168,18 @@ export const App = () => {
       </section>
 
       <section className="arena">
-        <PlayerPanel label="Player A" teamName={selectedTeamA.teamName} player={gameState.playerA} maxHp={modeConfig.initialHp} />
-        <PlayerPanel label="Player B" teamName={selectedTeamB.teamName} player={gameState.playerB} maxHp={modeConfig.initialHp} />
+        <PlayerPanel label="Player A" teamName={activeTeamA.teamName} player={gameState.playerA} maxHp={modeConfig.initialHp} />
+        <PlayerPanel label="Player B" teamName={activeTeamB.teamName} player={gameState.playerB} maxHp={modeConfig.initialHp} />
       </section>
 
       <section className="queues">
         <div className="panel">
-          <h2>{selectedTeamA.teamName} Queue</h2>
-          <CommandQueue commands={gameState.playerA.commands.slice(0, modeConfig.maxTurns)} activeTurn={gameState.turnIndex} />
+          <h2>{activeTeamA.teamName} Base 7-Command Queue</h2>
+          <CommandQueue commands={activeTeamA.commands.slice(0, INPUT_SLOT_COUNT)} activeTurn={gameState.turnIndex % INPUT_SLOT_COUNT} />
         </div>
         <div className="panel">
-          <h2>{selectedTeamB.teamName} Queue</h2>
-          <CommandQueue commands={gameState.playerB.commands.slice(0, modeConfig.maxTurns)} activeTurn={gameState.turnIndex} />
+          <h2>{activeTeamB.teamName} Base 7-Command Queue</h2>
+          <CommandQueue commands={activeTeamB.commands.slice(0, INPUT_SLOT_COUNT)} activeTurn={gameState.turnIndex % INPUT_SLOT_COUNT} />
         </div>
       </section>
 
