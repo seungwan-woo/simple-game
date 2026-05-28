@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getCommandOption } from '../core/localCommandEntry';
 import { AnimationEvent } from '../core/simulationTimeline';
 import { Command } from '../core/types';
+import './TimelinePlaybackPanel.css';
 
 interface TimelinePlaybackPanelProps {
   timeline: AnimationEvent[];
