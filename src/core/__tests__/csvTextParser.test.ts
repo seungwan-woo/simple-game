@@ -3,7 +3,7 @@ import * as E from 'fp-ts/Either';
 import { parseCsvText } from '../csvTextParser';
 
 const validCsv = `team,cmd1,cmd2,cmd3,cmd4,cmd5,cmd6,cmd7
-alpha,charge,mid_attack,guard,low_block,low_attack,charge,mid_attack
+alpha,charge,mid_attack,throw,low_block,low_attack,charge,mid_attack
 beta,low_block,low_block,mid_block,low_attack,charge,throw,mid_block`;
 
 describe('csvTextParser', () => {
