@@ -6,28 +6,44 @@ import { Command, ParsedTeam, RawCsvRow } from './types';
 import { GAME_SYSTEM_CONSTANTS } from './constants';
 import { chunkArray, delayTask } from './utils';
 
+const normalizeCommandKey = (value: string | undefined): string =>
+  (value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
+
 const COMMAND_MAP: Record<string, Command> = {
-  '중단 공격': 'MID_ATTACK',
-  '하단 공격': 'LOW_ATTACK',
-  '중단 막기': 'MID_BLOCK',
-  '하단 막기': 'LOW_BLOCK',
-  '기 모으기': 'CHARGE',
-  '던지기': 'THROW',
+  mid_attack: 'MID_ATTACK',
+  low_attack: 'LOW_ATTACK',
+  mid_block: 'MID_BLOCK',
+  low_block: 'LOW_BLOCK',
+  charge: 'CHARGE',
+  throw: 'THROW',
+  중단_공격: 'MID_ATTACK',
+  하단_공격: 'LOW_ATTACK',
+  중단_막기: 'MID_BLOCK',
+  하단_막기: 'LOW_BLOCK',
+  기_모으기: 'CHARGE',
+  던지기: 'THROW',
 };
 
+const parseCommand = (value: string | undefined): Command =>
+  COMMAND_MAP[normalizeCommandKey(value)] ?? GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND;
+
+const readTeamName = (row: RawCsvRow): string =>
+  row.team || row.Team || row.TEAM || row['팀명'] || 'Unknown Team';
+
+const readCommandSlot = (row: RawCsvRow, slot: number): string | undefined =>
+  row[`cmd${slot}`] ??
+  row[`CMD${slot}`] ??
+  row[`Cmd${slot}`] ??
+  row[`${slot}번째 커맨드`];
+
 export const parseRowToTeam = (row: RawCsvRow): ParsedTeam => ({
-  teamName: row['팀명'] || 'Unknown Team',
+  teamName: readTeamName(row),
   commands: pipe(
-    [
-      row['1번째 커맨드'],
-      row['2번째 커맨드'],
-      row['3번째 커맨드'],
-      row['4번째 커맨드'],
-      row['5번째 커맨드'],
-      row['6번째 커맨드'],
-      row['7번째 커맨드'],
-    ],
-    A.map((cmdStr) => COMMAND_MAP[cmdStr] ?? GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND)
+    [1, 2, 3, 4, 5, 6, 7],
+    A.map((slot) => parseCommand(readCommandSlot(row, slot)))
   ),
 });
 
