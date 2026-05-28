@@ -22,6 +22,35 @@ Code Striker is a static web SPA for turn-based command battle simulation. It ta
 - Block and throw preserve charge.
 - Being hit while charging does not destroy charge.
 
+## CSV Import
+
+The app supports CSV import for workshop/team-building operation.
+
+Required CSV columns:
+
+```csv
+팀명,1번째 커맨드,2번째 커맨드,3번째 커맨드,4번째 커맨드,5번째 커맨드,6번째 커맨드,7번째 커맨드
+```
+
+Supported Korean command values:
+
+- `중단 공격`
+- `하단 공격`
+- `중단 막기`
+- `하단 막기`
+- `기 모으기`
+- `던지기`
+
+CSV import behavior:
+
+- UTF-8 BOM is ignored.
+- Blank lines are ignored.
+- Header-based rows are converted to `RawCsvRow`.
+- Missing cells are filled with empty strings and later fall back to the default command.
+- Imported rows are progressively parsed in chunks through the existing async parser.
+- The UI shows `로딩 중... loaded / total` and `로딩 완료 loaded / total` status.
+- After import completes, the first two teams are selected automatically and the match state is reset.
+
 ## Local 2-Player Secret Entry
 
 The local two-player flow supports offline play on one shared browser.
@@ -83,8 +112,11 @@ Preset Teams / Secret Local Input / CSV Input
 
 The playable MVP provides:
 
+- CSV team import
+- Sample CSV download
+- Progressive loading status badge
 - Local 2-player secret command entry
-- Team A / Team B preset selection
+- Team A / Team B preset/imported team selection
 - Match mode selection
 - Start Match / Next Turn / Run Full Match / Reset controls
 - 2-second Auto Play
@@ -102,6 +134,7 @@ The playable MVP provides:
 | Replayability | TurnEvent log enables deterministic replay. |
 | UX extensibility | Timeline events separate logical time from render time. |
 | Local playability | Secret command entry enables two players to play on one shared browser. |
+| Operability | CSV import and sample template support workshop operation. |
 | Deployability | Vite base path and GitHub Pages workflow are included. |
 
 ## GitHub Pages
