@@ -50,7 +50,7 @@ export const CsvImportPanel = ({
         <div>
           <p className="eyebrow">CSV Import</p>
           <h2>Import workshop teams</h2>
-          <p>Upload a CSV file with team names and seven Korean command columns.</p>
+          <p>Upload a CSV file using team, cmd1, cmd2, ... with values like charge or low_block.</p>
         </div>
         <ImportStatusBadge isLoading={isLoading} loaded={loadedCount} total={totalCount} />
       </div>
