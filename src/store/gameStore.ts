@@ -36,6 +36,8 @@ interface GameStore {
   matchMode: MatchMode;
   selectedTeamAIndex: number;
   selectedTeamBIndex: number;
+  activeTeamA: ParsedTeam;
+  activeTeamB: ParsedTeam;
   matchSummary: MatchSummary;
   secretEntryPhase: SecretEntryPhase;
   secretDraftCommands: Command[];
@@ -59,6 +61,8 @@ interface GameStore {
 }
 
 const defaultMode: MatchMode = 'FIXED_TURN_REMAINING_HP';
+const defaultTeamA = sampleTeams[0];
+const defaultTeamB = sampleTeams[1] ?? sampleTeams[0];
 
 const defaultConfig: TunableGameConfig = {
   MAX_HP: GAME_SYSTEM_CONSTANTS.DEFAULT_MAX_HP,
@@ -87,8 +91,8 @@ const createDefaultSummary = (state: GameState): MatchSummary =>
 const getSelectedTeams = (normalizedTeams: NormalizedTeams, teamAIndex: number, teamBIndex: number) => {
   const teams = selectTeams(normalizedTeams);
   return {
-    teamA: teams[teamAIndex] ?? sampleTeams[0],
-    teamB: teams[teamBIndex] ?? sampleTeams[1] ?? sampleTeams[0],
+    teamA: teams[teamAIndex] ?? defaultTeamA,
+    teamB: teams[teamBIndex] ?? defaultTeamB,
   };
 };
 
@@ -106,6 +110,8 @@ const buildStartedState = (
   return {
     config: createConfigForMode(config, modeConfig),
     gameState,
+    activeTeamA: teamA,
+    activeTeamB: teamB,
     latestTurnEvent: null,
     latestTimeline: [],
     matchSummary: createMatchSummary(gameState, modeConfig),
@@ -124,6 +130,8 @@ const buildLocalStartedState = (
   return {
     config: createConfigForMode(config, modeConfig),
     gameState,
+    activeTeamA: teamA,
+    activeTeamB: teamB,
     latestTurnEvent: null,
     latestTimeline: [],
     matchSummary: createMatchSummary(gameState, modeConfig),
@@ -146,6 +154,8 @@ export const useGameStore = create<GameStore>()(
       matchMode: defaultMode,
       selectedTeamAIndex: 0,
       selectedTeamBIndex: 1,
+      activeTeamA: defaultTeamA,
+      activeTeamB: defaultTeamB,
       matchSummary: createDefaultSummary(initialGameState),
       secretEntryPhase: 'PLAYER_A_INPUT',
       secretDraftCommands: createDefaultCommandDraft(),
@@ -173,6 +183,7 @@ export const useGameStore = create<GameStore>()(
       selectMatchMode: (mode) =>
         set((store) => ({
           matchMode: mode,
+          secretDraftCommands: createDefaultCommandDraft(),
           ...buildStartedState(store.config, store.normalizedTeams, store.selectedTeamAIndex, store.selectedTeamBIndex, mode),
         }), false, 'match/select_mode'),
       updateSecretDraftCommand: (index, command) =>
@@ -184,7 +195,7 @@ export const useGameStore = create<GameStore>()(
 
           return {
             secretEntryPhase: getNextSecretEntryPhase(store.secretEntryPhase),
-            secretDraftCommands: createDefaultCommandDraft(MATCH_MODE_CONFIGS[store.matchMode].maxTurns),
+            secretDraftCommands: createDefaultCommandDraft(),
             secretPlayerA: store.secretEntryPhase === 'PLAYER_A_INPUT' ? submittedTeam : store.secretPlayerA,
             secretPlayerB: store.secretEntryPhase === 'PLAYER_B_INPUT' ? submittedTeam : store.secretPlayerB,
           };
@@ -242,6 +253,8 @@ export const useGameStore = create<GameStore>()(
           return {
             gameState,
             config: createConfigForMode(store.config, modeConfig),
+            activeTeamA: teamA,
+            activeTeamB: teamB,
             latestTurnEvent: null,
             latestTimeline: [],
             matchSummary: createMatchSummary(gameState, modeConfig),
