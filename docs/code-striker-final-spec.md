@@ -26,20 +26,24 @@ Code Striker is a static web SPA for turn-based command battle simulation. It ta
 
 The app supports CSV import for workshop/team-building operation.
 
-Required CSV columns:
+Recommended CSV columns use short English names to reduce typo risk:
 
 ```csv
-팀명,1번째 커맨드,2번째 커맨드,3번째 커맨드,4번째 커맨드,5번째 커맨드,6번째 커맨드,7번째 커맨드
+team,cmd1,cmd2,cmd3,cmd4,cmd5,cmd6,cmd7
+alpha,charge,mid_attack,throw,low_block,low_attack,charge,mid_attack
+beta,low_block,low_block,mid_block,low_attack,charge,throw,mid_block
 ```
 
-Supported Korean command values:
+Supported command values:
 
-- `중단 공격`
-- `하단 공격`
-- `중단 막기`
-- `하단 막기`
-- `기 모으기`
-- `던지기`
+- `mid_attack`
+- `low_attack`
+- `mid_block`
+- `low_block`
+- `charge`
+- `throw`
+
+Legacy Korean headers and command labels are still accepted for compatibility, but the downloaded sample template uses the short English format.
 
 CSV import behavior:
 
