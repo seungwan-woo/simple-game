@@ -162,7 +162,14 @@ export const useGameStore = create<GameStore>()(
       secretPlayerA: null,
       secretPlayerB: null,
       importCsvData: async (rawRows) => {
-        set({ totalTeamsCount: rawRows.length, isStreamingLoading: true, normalizedTeams: emptyNormalizedTeams, teamsLoadedCount: 0 }, false, 'csv/start');
+        set({
+          totalTeamsCount: rawRows.length,
+          isStreamingLoading: true,
+          normalizedTeams: emptyNormalizedTeams,
+          teamsLoadedCount: 0,
+          selectedTeamAIndex: 0,
+          selectedTeamBIndex: rawRows.length > 1 ? 1 : 0,
+        }, false, 'csv/start');
         const pipeline = parseCsvProgressively(rawRows, (chunkTeams) =>
           set((state) => {
             const nextNormalizedTeams = normalizeTeams(chunkTeams, state.teamsLoadedCount);
@@ -173,7 +180,15 @@ export const useGameStore = create<GameStore>()(
           }, false, 'csv/chunk')
         );
         const result = await pipeline();
-        set({ isStreamingLoading: false }, false, result._tag === 'Left' ? 'csv/error' : 'csv/complete');
+        if (result._tag === 'Left') {
+          set({ isStreamingLoading: false }, false, 'csv/error');
+          return;
+        }
+
+        set((store) => ({
+          isStreamingLoading: false,
+          ...buildStartedState(store.config, store.normalizedTeams, 0, rawRows.length > 1 ? 1 : 0, store.matchMode),
+        }), false, 'csv/complete');
       },
       getImportedTeams: () => selectTeams(get().normalizedTeams),
       loadSampleTeams: () =>
