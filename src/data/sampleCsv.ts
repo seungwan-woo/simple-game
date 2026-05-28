@@ -1,8 +1,8 @@
-export const SAMPLE_CSV_TEXT = `팀명,1번째 커맨드,2번째 커맨드,3번째 커맨드,4번째 커맨드,5번째 커맨드,6번째 커맨드,7번째 커맨드
-Alpha,기 모으기,중단 공격,던지기,하단 막기,하단 공격,기 모으기,중단 공격
-Beta,하단 막기,하단 막기,중단 막기,하단 공격,기 모으기,던지기,중단 막기
-Gamma,중단 공격,하단 공격,중단 공격,던지기,하단 공격,중단 막기,중단 공격
-Delta,기 모으기,기 모으기,하단 막기,던지기,중단 공격,하단 공격,중단 막기`;
+export const SAMPLE_CSV_TEXT = `team,cmd1,cmd2,cmd3,cmd4,cmd5,cmd6,cmd7
+alpha,charge,mid_attack,throw,low_block,low_attack,charge,mid_attack
+beta,low_block,low_block,mid_block,low_attack,charge,throw,mid_block
+gamma,mid_attack,low_attack,mid_attack,throw,low_attack,mid_block,mid_attack
+delta,charge,charge,low_block,throw,mid_attack,low_attack,mid_block`;
 
 export const downloadSampleCsv = (): void => {
   const blob = new Blob([SAMPLE_CSV_TEXT], { type: 'text/csv;charset=utf-8' });
