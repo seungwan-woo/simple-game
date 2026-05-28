@@ -15,6 +15,8 @@ import { useGameStore } from './store/gameStore';
 const AUTO_PLAY_INTERVAL_MS = 2000;
 const INPUT_SLOT_COUNT = GAME_SYSTEM_CONSTANTS.DEFAULT_TOTAL_COMMAND_SLOTS;
 
+type AppView = 'INPUT' | 'BATTLE' | 'RESULT';
+
 const winnerLabel = (winner: MatchWinner): string => {
   switch (winner) {
     case 'A':
@@ -28,8 +30,15 @@ const winnerLabel = (winner: MatchWinner): string => {
   }
 };
 
+const viewLabel: Record<AppView, string> = {
+  INPUT: '1. Input',
+  BATTLE: '2. Battle',
+  RESULT: '3. Result',
+};
+
 export const App = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [currentView, setCurrentView] = useState<AppView>('INPUT');
   const {
     gameState,
     normalizedTeams,
@@ -86,6 +95,17 @@ export const App = () => {
   const damageToA = latestTurnEvent?.damageToA ?? 0;
   const damageToB = latestTurnEvent?.damageToB ?? 0;
 
+  const goHome = () => {
+    setIsAutoPlaying(false);
+    setCurrentView('INPUT');
+  };
+
+  const goBattle = () => setCurrentView('BATTLE');
+  const goResult = () => {
+    setIsAutoPlaying(false);
+    setCurrentView('RESULT');
+  };
+
   const handleRunFullMatch = () => {
     setIsAutoPlaying(false);
     runCurrentMatchToEnd();
@@ -94,11 +114,13 @@ export const App = () => {
   const handleStartLocalMatch = () => {
     setIsAutoPlaying(false);
     startSecretEntryMatch();
+    setCurrentView('BATTLE');
   };
 
   const handleStartPresetMatch = () => {
     setIsAutoPlaying(false);
     startMatch();
+    setCurrentView('BATTLE');
   };
 
   const handleImportCsv = async (...args: Parameters<typeof importCsvData>) => {
@@ -106,14 +128,30 @@ export const App = () => {
     await importCsvData(...args);
   };
 
-  return (
-    <main className="shell">
-      <section className="hero">
+  const renderNavigation = () => (
+    <nav className="app-nav" aria-label="Page navigation">
+      {(Object.keys(viewLabel) as AppView[]).map((view) => (
+        <button
+          key={view}
+          className={`nav-pill ${currentView === view ? 'active' : ''}`}
+          onClick={() => {
+            if (view !== 'BATTLE') setIsAutoPlaying(false);
+            setCurrentView(view);
+          }}
+          type="button"
+        >
+          {viewLabel[view]}
+        </button>
+      ))}
+    </nav>
+  );
+
+  const renderInputPage = () => (
+    <>
+      <section className="hero page-hero">
         <p className="eyebrow">Code Striker</p>
-        <h1>Playable command battle MVP</h1>
-        <p>
-          Choose preset teams, import CSV teams, or use local 2-player secret entry. Then step manually, run full match, or auto play every two seconds.
-        </p>
+        <h1>Set up the match</h1>
+        <p>Import teams, choose preset teams, or use local 2-player secret entry. Start the match when both players are ready.</p>
       </section>
 
       <CsvImportPanel
@@ -140,7 +178,7 @@ export const App = () => {
         selectedTeamAIndex={selectedTeamAIndex}
         selectedTeamBIndex={selectedTeamBIndex}
         matchMode={matchMode}
-        isFinished={matchSummary.isFinished}
+        isFinished={false}
         onSelectTeamA={selectTeamA}
         onSelectTeamB={selectTeamB}
         onSelectMode={selectMatchMode}
@@ -149,15 +187,19 @@ export const App = () => {
         onRunFull={handleRunFullMatch}
         onReset={handleStartPresetMatch}
       />
+    </>
+  );
 
-      <TimelinePlaybackPanel timeline={latestTimeline} />
-
-      <section className={`winner-banner ${matchSummary.isFinished ? 'finished celebration-pop' : ''}`}>
-        <p className="eyebrow">Match Result</p>
-        <h2>{displayWinner}</h2>
-        <p>
-          Player A {matchSummary.finalHpA} energy / Player B {matchSummary.finalHpB} energy · {matchSummary.totalTurns} turns played
-        </p>
+  const renderBattlePage = () => (
+    <>
+      <section className="hero page-hero compact-hero">
+        <p className="eyebrow">Battle Page</p>
+        <h1>{activeTeamA.teamName} vs {activeTeamB.teamName}</h1>
+        <p>Play turn by turn, run auto play, or jump to the result page when you want to review the outcome.</p>
+        <div className="page-actions">
+          <button className="ghost-button" onClick={goHome}>Back to Input</button>
+          <button onClick={goResult}>View Result</button>
+        </div>
       </section>
 
       <section className="panel auto-play-panel">
@@ -209,6 +251,23 @@ export const App = () => {
         />
       </section>
 
+      <MatchControls
+        teams={teams}
+        selectedTeamAIndex={selectedTeamAIndex}
+        selectedTeamBIndex={selectedTeamBIndex}
+        matchMode={matchMode}
+        isFinished={matchSummary.isFinished}
+        onSelectTeamA={selectTeamA}
+        onSelectTeamB={selectTeamB}
+        onSelectMode={selectMatchMode}
+        onStart={handleStartPresetMatch}
+        onStep={stepNextTurn}
+        onRunFull={handleRunFullMatch}
+        onReset={handleStartPresetMatch}
+      />
+
+      <TimelinePlaybackPanel timeline={latestTimeline} />
+
       <section className="queues">
         <div className="panel">
           <h2>{activeTeamA.teamName} Base 7-Command Queue</h2>
@@ -221,7 +280,50 @@ export const App = () => {
       </section>
 
       <TurnEventPanel event={latestTurnEvent} />
+    </>
+  );
+
+  const renderResultPage = () => (
+    <>
+      <section className={`winner-banner result-page-result ${matchSummary.isFinished ? 'finished celebration-pop' : ''}`}>
+        <p className="eyebrow">Result Page</p>
+        <h2>{displayWinner}</h2>
+        <p>
+          Player A {matchSummary.finalHpA} energy / Player B {matchSummary.finalHpB} energy · {matchSummary.totalTurns} turns played
+        </p>
+        <div className="page-actions centered">
+          <button className="ghost-button" onClick={goHome}>Back to Input</button>
+          <button onClick={goBattle}>Back to Battle</button>
+        </div>
+      </section>
+
+      <section className="arena">
+        <PlayerPanel
+          label="Player A"
+          teamName={activeTeamA.teamName}
+          player={gameState.playerA}
+          maxHp={modeConfig.initialHp}
+          isWinner={matchSummary.isFinished && matchSummary.winner === 'A'}
+        />
+        <PlayerPanel
+          label="Player B"
+          teamName={activeTeamB.teamName}
+          player={gameState.playerB}
+          maxHp={modeConfig.initialHp}
+          isWinner={matchSummary.isFinished && matchSummary.winner === 'B'}
+        />
+      </section>
+
       <ReplayLog events={gameState.replay.events} />
+    </>
+  );
+
+  return (
+    <main className="shell">
+      {renderNavigation()}
+      {currentView === 'INPUT' && renderInputPage()}
+      {currentView === 'BATTLE' && renderBattlePage()}
+      {currentView === 'RESULT' && renderResultPage()}
     </main>
   );
 };
