@@ -5,6 +5,7 @@ import { MatchControls } from './components/MatchControls';
 import { PlayerPanel } from './components/PlayerPanel';
 import { ReplayLog } from './components/ReplayLog';
 import { SecretCommandEntryPanel } from './components/SecretCommandEntryPanel';
+import { TimelinePlaybackPanel } from './components/TimelinePlaybackPanel';
 import { TurnEventPanel } from './components/TurnEventPanel';
 import { GAME_SYSTEM_CONSTANTS } from './core/constants';
 import { MATCH_MODE_CONFIGS, MatchWinner } from './core/matchSimulator';
@@ -42,6 +43,7 @@ export const App = () => {
     matchMode,
     matchSummary,
     latestTurnEvent,
+    latestTimeline,
     secretEntryPhase,
     secretDraftCommands,
     secretPlayerA,
@@ -145,6 +147,8 @@ export const App = () => {
         onRunFull={handleRunFullMatch}
         onReset={handleStartPresetMatch}
       />
+
+      <TimelinePlaybackPanel timeline={latestTimeline} />
 
       <section className={`winner-banner ${matchSummary.isFinished ? 'finished' : ''}`}>
         <p className="eyebrow">Match Result</p>
