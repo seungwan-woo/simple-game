@@ -1,4 +1,10 @@
-import { COMMAND_OPTIONS, SecretEntryPhase, maskSubmittedCommands } from '../core/localCommandEntry';
+import { useState } from 'react';
+import {
+  COMMAND_OPTIONS,
+  SecretEntryPhase,
+  getCommandOption,
+  maskSubmittedCommands,
+} from '../core/localCommandEntry';
 import { Command, ParsedTeam } from '../core/types';
 
 interface SecretCommandEntryPanelProps {
@@ -20,24 +26,24 @@ const phaseTitle: Record<SecretEntryPhase, string> = {
 };
 
 const phaseDescription: Record<SecretEntryPhase, string> = {
-  PLAYER_A_INPUT: 'Player A chooses exactly 7 commands first. After confirmation, commands will be hidden.',
-  PLAYER_B_INPUT: 'Player B now chooses exactly 7 commands. Player A commands are hidden.',
+  PLAYER_A_INPUT: 'Pick 7 moves. Tap a slot, then tap a command card. Fast, private, and easy to scan.',
+  PLAYER_B_INPUT: 'Player A is hidden. Player B now picks the same 7-slot strategy.',
   READY: 'Both 7-command queues are locked. Start the local match when ready.',
 };
 
-const commandLabel = (command: Command): string =>
-  COMMAND_OPTIONS.find((option) => option.command === command)?.label ?? command;
-
-const DraftSummary = ({ commands }: { commands: Command[] }) => (
-  <ol className="draft-summary">
-    {commands.map((command, index) => (
-      <li key={`${command}-${index}`}>
-        <span>{index + 1}</span>
-        <strong>{commandLabel(command)}</strong>
-        <small>{command}</small>
-      </li>
-    ))}
-  </ol>
+const SubmittedQueue = ({ label, team }: { label: string; team: ParsedTeam | null }) => (
+  <div className="secret-entry-card">
+    <h3>{label}</h3>
+    {team === null ? (
+      <p className="muted-copy">Not submitted yet.</p>
+    ) : (
+      <ol className="masked-queue compact-seven">
+        {maskSubmittedCommands(team.commands).map((maskedCommand, index) => (
+          <li key={`${label}-${index}`}><span>{index + 1}</span>{maskedCommand}</li>
+        ))}
+      </ol>
+    )}
+  </div>
 );
 
 export const SecretCommandEntryPanel = ({
@@ -52,73 +58,69 @@ export const SecretCommandEntryPanel = ({
   onResetLocalEntry,
 }: SecretCommandEntryPanelProps) => {
   const isReady = phase === 'READY';
+  const [selectedSlot, setSelectedSlot] = useState(0);
+
+  const handleCommandPick = (command: Command) => {
+    onChangeDraftCommand(selectedSlot, command);
+    setSelectedSlot((current) => Math.min(current + 1, slotCount - 1));
+  };
 
   return (
-    <section className="panel secret-entry-panel">
+    <section className="panel secret-entry-panel lovable-card">
       <div className="secret-entry-header">
         <div>
           <p className="eyebrow">Local 2P Secret Entry</p>
           <h2>{phaseTitle[phase]}</h2>
           <p>{phaseDescription[phase]}</p>
         </div>
-        <button onClick={onResetLocalEntry}>Reset Entry</button>
+        <button className="ghost-button" onClick={onResetLocalEntry}>Reset Entry</button>
       </div>
 
       <div className="secret-entry-grid">
-        <div className="secret-entry-card">
-          <h3>Player A</h3>
-          {playerA === null ? (
-            <p>Not submitted yet.</p>
-          ) : (
-            <ol className="masked-queue compact-seven">
-              {maskSubmittedCommands(playerA.commands).map((maskedCommand, index) => (
-                <li key={`a-${index}`}><span>{index + 1}</span>{maskedCommand}</li>
-              ))}
-            </ol>
-          )}
-        </div>
-
-        <div className="secret-entry-card">
-          <h3>Player B</h3>
-          {playerB === null ? (
-            <p>Not submitted yet.</p>
-          ) : (
-            <ol className="masked-queue compact-seven">
-              {maskSubmittedCommands(playerB.commands).map((maskedCommand, index) => (
-                <li key={`b-${index}`}><span>{index + 1}</span>{maskedCommand}</li>
-              ))}
-            </ol>
-          )}
-        </div>
+        <SubmittedQueue label="Player A" team={playerA} />
+        <SubmittedQueue label="Player B" team={playerB} />
       </div>
 
       {!isReady && (
-        <>
-          <div className="draft-preview-panel">
-            <h3>Current 7-command plan</h3>
-            <DraftSummary commands={draftCommands.slice(0, slotCount)} />
-          </div>
-          <div className="command-entry-list">
-            {Array.from({ length: slotCount }, (_, index) => (
-              <label key={index}>
-                Slot {index + 1}
-                <select
-                  value={draftCommands[index]}
-                  onChange={(event) => onChangeDraftCommand(index, event.target.value as Command)}
+        <div className="fast-entry-shell">
+          <div className="slot-strip" aria-label="7 command slots">
+            {draftCommands.slice(0, slotCount).map((command, index) => {
+              const option = getCommandOption(command);
+              return (
+                <button
+                  key={`${command}-${index}`}
+                  className={`slot-chip ${selectedSlot === index ? 'selected' : ''}`}
+                  onClick={() => setSelectedSlot(index)}
+                  type="button"
                 >
-                  {COMMAND_OPTIONS.map(({ command, label }) => (
-                    <option key={command} value={command}>{label}</option>
-                  ))}
-                </select>
-              </label>
+                  <span className="slot-index">{index + 1}</span>
+                  <span className="slot-emoji">{option.emoji}</span>
+                  <strong>{option.shortLabel}</strong>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="command-pad" aria-label="command picker">
+            {COMMAND_OPTIONS.map((option) => (
+              <button
+                key={option.command}
+                className={`command-card ${draftCommands[selectedSlot] === option.command ? 'active' : ''}`}
+                onClick={() => handleCommandPick(option.command)}
+                type="button"
+              >
+                <span className="command-emoji">{option.emoji}</span>
+                <strong>{option.label}</strong>
+                <small>{option.hint}</small>
+              </button>
             ))}
           </div>
-        </>
+        </div>
       )}
 
       <div className="actions">
-        {!isReady && <button onClick={onConfirmCurrentPlayer}>Confirm and Hide Commands</button>}
-        {isReady && <button onClick={onStartLocalMatch}>Start Local Match</button>}
+        {!isReady && <button className="primary-button" onClick={onConfirmCurrentPlayer}>Confirm and Hide Commands</button>}
+        {isReady && <button className="primary-button" onClick={onStartLocalMatch}>Start Local Match</button>}
       </div>
     </section>
   );
