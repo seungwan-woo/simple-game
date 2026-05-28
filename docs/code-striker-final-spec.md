@@ -89,6 +89,19 @@ Playback order:
 
 The playback timer is isolated inside the React presentation component. The core game engine remains pure and replayable.
 
+## Battle Presentation Effects
+
+The battle view adds lightweight presentation effects on top of the deterministic state update:
+
+- Damage number pop appears over the damaged player card.
+- Damaged player card shakes briefly on hit.
+- Winning player card receives a short glow treatment.
+- Final result banner uses a small celebration pop animation.
+- Active command queue item pulses while the current base 7-command slot is highlighted.
+- `prefers-reduced-motion` disables motion-heavy animation for accessibility.
+
+These effects are CSS-only and do not change engine state, scoring, replay events, or match results.
+
 ## Match Modes
 
 Code Striker supports three match modes.
@@ -123,6 +136,7 @@ Preset Teams / Secret Local Input / CSV Input
   -> Replay Log
   -> Simulation Timeline
   -> Timeline Playback UI
+  -> Battle Presentation Effects
   -> React UI
 ```
 
@@ -139,6 +153,8 @@ The playable MVP provides:
 - Start Match / Next Turn / Run Full Match / Reset controls
 - 2-second Auto Play
 - Dual-layer HP bar
+- Damage pop and hit shake effects
+- Winner glow and celebration banner
 - Command queue visualization
 - Timeline playback broadcast panel
 - Latest turn event panel
@@ -154,6 +170,7 @@ The playable MVP provides:
 | UX extensibility | Timeline events separate logical time from render time. |
 | Local playability | Secret command entry enables two players to play on one shared browser. |
 | Operability | CSV import and sample template support workshop operation. |
+| Accessibility | `prefers-reduced-motion` disables motion-heavy presentation effects. |
 | Deployability | Vite base path and GitHub Pages workflow are included. |
 
 ## GitHub Pages
