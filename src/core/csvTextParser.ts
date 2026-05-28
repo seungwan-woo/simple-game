@@ -31,11 +31,16 @@ const splitCsvLine = (line: string): string[] => {
   return cells;
 };
 
+const normalizeHeader = (header: string): string => header.trim().toLowerCase();
+
+const isSupportedTeamHeader = (header: string): boolean =>
+  normalizeHeader(header) === 'team' || header === '팀명';
+
 const toRow = (headers: string[]) => (cells: string[]): RawCsvRow =>
   headers.reduce<RawCsvRow>((row, header, index) => ({
     ...row,
     [header]: cells[index] ?? '',
-  }), { '팀명': cells[headers.indexOf('팀명')] ?? '' });
+  }), { '팀명': '', team: cells[headers.findIndex(isSupportedTeamHeader)] ?? '' });
 
 export const parseCsvText = (text: string): E.Either<Error, RawCsvRow[]> => {
   const lines = normalizeLineBreaks(stripBom(text))
@@ -50,8 +55,8 @@ export const parseCsvText = (text: string): E.Either<Error, RawCsvRow[]> => {
   const [headerLine, ...dataLines] = lines;
   const headers = splitCsvLine(headerLine).map((header) => header.trim());
 
-  if (!headers.includes('팀명')) {
-    return E.left(new Error('CSV 헤더에 "팀명" 컬럼이 필요합니다.'));
+  if (!headers.some(isSupportedTeamHeader)) {
+    return E.left(new Error('CSV 헤더에 "team" 컬럼이 필요합니다.'));
   }
 
   return E.right(dataLines.map((line) => toRow(headers)(splitCsvLine(line))));
