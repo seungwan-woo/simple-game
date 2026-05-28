@@ -22,6 +22,22 @@ Code Striker is a static web SPA for turn-based command battle simulation. It ta
 - Block and throw preserve charge.
 - Being hit while charging does not destroy charge.
 
+## Page Flow Navigation
+
+The app is organized as a simple three-view flow without adding a full router dependency:
+
+1. `INPUT` — CSV import, local 2-player secret entry, team selection, and match mode setup.
+2. `BATTLE` — active match controls, arena, HP bars, auto play, timeline playback, and command queues.
+3. `RESULT` — final winner/result summary and replay log.
+
+Navigation rules:
+
+- The app initially opens on the input page.
+- Starting a preset match or local secret-entry match navigates to the battle page.
+- The battle page can navigate to the result page through `View Result`.
+- Battle and result pages both provide a path back to the input page.
+- Leaving the battle flow stops auto play to avoid hidden background turns.
+
 ## CSV Import
 
 The app supports CSV import for workshop/team-building operation.
@@ -137,6 +153,7 @@ Preset Teams / Secret Local Input / CSV Input
   -> Simulation Timeline
   -> Timeline Playback UI
   -> Battle Presentation Effects
+  -> View State Navigation
   -> React UI
 ```
 
@@ -144,6 +161,7 @@ Preset Teams / Secret Local Input / CSV Input
 
 The playable MVP provides:
 
+- Three-view page flow: Input, Battle, Result
 - CSV team import
 - Sample CSV download
 - Progressive loading status badge
@@ -168,6 +186,7 @@ The playable MVP provides:
 | Modifiability | Semantic outcomes and match modes separate rule meaning from damage policy. |
 | Replayability | TurnEvent log enables deterministic replay. |
 | UX extensibility | Timeline events separate logical time from render time. |
+| Usability | Three-view navigation separates setup, play, and result review into focused pages. |
 | Local playability | Secret command entry enables two players to play on one shared browser. |
 | Operability | CSV import and sample template support workshop operation. |
 | Accessibility | `prefers-reduced-motion` disables motion-heavy presentation effects. |
