@@ -76,6 +76,19 @@ The playable MVP supports auto play:
 - Auto play stops automatically when the match is finished.
 - Manual `Run Full Match` stops auto play first and then resolves the remaining match immediately.
 
+## Timeline Playback
+
+Each completed turn produces an animation timeline. The UI replays the timeline as a broadcast sequence without mutating the deterministic game engine.
+
+Playback order:
+
+1. `COMMAND_REVEAL` — show both selected commands.
+2. `OUTCOME_LABEL` — show the semantic battle outcome.
+3. `DAMAGE_APPLY` — show damage and resulting HP for affected players.
+4. `HP_GHOST_CHASE` — show the delayed HP trail settling.
+
+The playback timer is isolated inside the React presentation component. The core game engine remains pure and replayable.
+
 ## Match Modes
 
 Code Striker supports three match modes.
@@ -109,6 +122,7 @@ Preset Teams / Secret Local Input / CSV Input
        -> TurnEvent
   -> Replay Log
   -> Simulation Timeline
+  -> Timeline Playback UI
   -> React UI
 ```
 
@@ -126,6 +140,7 @@ The playable MVP provides:
 - 2-second Auto Play
 - Dual-layer HP bar
 - Command queue visualization
+- Timeline playback broadcast panel
 - Latest turn event panel
 - Replay log
 
