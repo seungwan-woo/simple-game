@@ -83,6 +83,8 @@ export const App = () => {
   const teams = getImportedTeams().length > 0 ? getImportedTeams() : sampleTeams;
   const modeConfig = MATCH_MODE_CONFIGS[matchMode];
   const displayWinner = matchSummary.isFinished ? winnerLabel(matchSummary.winner) : winnerLabel('UNDECIDED');
+  const damageToA = latestTurnEvent?.damageToA ?? 0;
+  const damageToB = latestTurnEvent?.damageToB ?? 0;
 
   const handleRunFullMatch = () => {
     setIsAutoPlaying(false);
@@ -150,7 +152,7 @@ export const App = () => {
 
       <TimelinePlaybackPanel timeline={latestTimeline} />
 
-      <section className={`winner-banner ${matchSummary.isFinished ? 'finished' : ''}`}>
+      <section className={`winner-banner ${matchSummary.isFinished ? 'finished celebration-pop' : ''}`}>
         <p className="eyebrow">Match Result</p>
         <h2>{displayWinner}</h2>
         <p>
@@ -189,8 +191,22 @@ export const App = () => {
       </section>
 
       <section className="arena">
-        <PlayerPanel label="Player A" teamName={activeTeamA.teamName} player={gameState.playerA} maxHp={modeConfig.initialHp} />
-        <PlayerPanel label="Player B" teamName={activeTeamB.teamName} player={gameState.playerB} maxHp={modeConfig.initialHp} />
+        <PlayerPanel
+          label="Player A"
+          teamName={activeTeamA.teamName}
+          player={gameState.playerA}
+          maxHp={modeConfig.initialHp}
+          damageTaken={damageToA}
+          isWinner={matchSummary.isFinished && matchSummary.winner === 'A'}
+        />
+        <PlayerPanel
+          label="Player B"
+          teamName={activeTeamB.teamName}
+          player={gameState.playerB}
+          maxHp={modeConfig.initialHp}
+          damageTaken={damageToB}
+          isWinner={matchSummary.isFinished && matchSummary.winner === 'B'}
+        />
       </section>
 
       <section className="queues">
