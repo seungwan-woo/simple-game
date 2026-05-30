@@ -58,7 +58,7 @@ export const TimelinePlaybackPanel = ({ timeline }: TimelinePlaybackPanelProps) 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [timelineKey, timeline]);
 
-  const activeEvent = activeStepIndex >= 0 ? timeline[activeStepIndex] : null;
+  const activeEvent = activeStepIndex >= 0 && activeStepIndex < timeline.length ? timeline[activeStepIndex] : null;
   const activeDescription = activeEvent === null ? null : describeAnimationEvent(activeEvent);
 
   return (
