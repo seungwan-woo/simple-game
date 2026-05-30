@@ -23,4 +23,10 @@ export const mergeNormalizedTeams = (current: NormalizedTeams, next: NormalizedT
 });
 
 export const selectTeams = (normalized: NormalizedTeams): ParsedTeam[] =>
-  pipe(normalized.teamIds, A.map((id) => normalized.teamsById[id]));
+  pipe(
+    normalized.teamIds,
+    A.reduce([] as ParsedTeam[], (teams, id) => {
+      const team = normalized.teamsById[id];
+      return team === undefined ? teams : [...teams, team];
+    })
+  );
