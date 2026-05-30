@@ -13,9 +13,8 @@ describe('csvTextParser', () => {
     expect(E.isRight(result)).toBe(true);
     if (E.isRight(result)) {
       expect(result.right).toHaveLength(2);
-      expect(result.right[0].team).toBe('alpha');
-      expect(result.right[0].cmd1).toBe('charge');
-      expect(result.right[1].cmd7).toBe('mid_block');
+      expect(result.right[0]).toMatchObject({ team: 'alpha', cmd1: 'charge' });
+      expect(result.right[1]).toMatchObject({ cmd7: 'mid_block' });
     }
   });
 
@@ -24,7 +23,7 @@ describe('csvTextParser', () => {
 
     expect(E.isRight(result)).toBe(true);
     if (E.isRight(result)) {
-      expect(result.right[0].team).toBe('alpha');
+      expect(result.right[0]).toMatchObject({ team: 'alpha' });
     }
   });
 
@@ -42,8 +41,7 @@ describe('csvTextParser', () => {
 
     expect(E.isRight(result)).toBe(true);
     if (E.isRight(result)) {
-      expect(result.right[0].team).toBe('alpha, one');
-      expect(result.right[0].cmd1).toBe('charge');
+      expect(result.right[0]).toMatchObject({ team: 'alpha, one', cmd1: 'charge' });
     }
   });
 
@@ -52,7 +50,7 @@ describe('csvTextParser', () => {
 
     expect(E.isRight(result)).toBe(true);
     if (E.isRight(result)) {
-      expect(result.right[0].cmd2).toBe('');
+      expect(result.right[0]).toMatchObject({ cmd2: '' });
     }
   });
 

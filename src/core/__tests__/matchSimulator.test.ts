@@ -47,6 +47,10 @@ describe('Code Striker Match Simulator', () => {
     ]);
   });
 
+  it('fills default commands when the source command queue is empty', () => {
+    expect(createRepeatedCommands([], 3)).toEqual(['MID_BLOCK', 'MID_BLOCK', 'MID_BLOCK']);
+  });
+
   it('mode 1 ends at the configured 7 turns and remaining energy decides the winner', () => {
     const modeConfig = MATCH_MODE_CONFIGS.FIXED_TURN_REMAINING_HP;
     const initial = createGameStateForMatch(attacker, charger, modeConfig);
