@@ -61,8 +61,12 @@ interface GameStore {
 }
 
 const defaultMode: MatchMode = 'FIXED_TURN_REMAINING_HP';
-const defaultTeamA = sampleTeams[0];
-const defaultTeamB = sampleTeams[1] ?? sampleTeams[0];
+const fallbackTeam: ParsedTeam = {
+  teamName: 'Fallback Team',
+  commands: createDefaultCommandDraft(),
+};
+const defaultTeamA = sampleTeams[0] ?? fallbackTeam;
+const defaultTeamB = sampleTeams[1] ?? defaultTeamA;
 
 const defaultConfig: TunableGameConfig = {
   MAX_HP: GAME_SYSTEM_CONSTANTS.DEFAULT_MAX_HP,

@@ -50,9 +50,11 @@ export const MATCH_MODE_CONFIGS: Record<MatchMode, MatchModeConfig> = {
 };
 
 export const createRepeatedCommands = (commands: Command[], maxTurns: number): Command[] =>
-  Array.from({ length: maxTurns }, (_, index) =>
-    commands[index % commands.length] ?? GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND
-  );
+  commands.length === 0
+    ? Array.from({ length: maxTurns }, () => GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND)
+    : Array.from({ length: maxTurns }, (_, index) =>
+        commands[index % commands.length] ?? GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND
+      );
 
 export const createGameStateForMatch = (
   teamA: ParsedTeam,
