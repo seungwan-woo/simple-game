@@ -26,7 +26,7 @@ export const getCommandOption = (command: Command): CommandOption =>
   COMMAND_OPTIONS.find((option) => option.command === command) ?? COMMAND_OPTIONS[0];
 
 export const createDefaultCommandDraft = (
-  slotCount = GAME_SYSTEM_CONSTANTS.DEFAULT_TOTAL_COMMAND_SLOTS
+  slotCount: number = GAME_SYSTEM_CONSTANTS.DEFAULT_TOTAL_COMMAND_SLOTS
 ): Command[] =>
   Array.from({ length: slotCount }, () => GAME_SYSTEM_CONSTANTS.DEFAULT_SLOT_COMMAND);
 
