@@ -21,4 +21,11 @@ describe('TimelinePlaybackPanel', () => {
     expect(() => rerender(<TimelinePlaybackPanel timeline={[]} />)).not.toThrow();
     expect(screen.getByText('Waiting for next turn')).not.toBeNull();
   });
+
+  it('ignores transient empty timeline entries', async () => {
+    const timelineWithEmptyEntry = [undefined, ...timeline] as unknown as AnimationEvent[];
+
+    expect(() => render(<TimelinePlaybackPanel timeline={timelineWithEmptyEntry} />)).not.toThrow();
+    expect(await screen.findByText('Turn 1: Command Reveal')).not.toBeNull();
+  });
 });

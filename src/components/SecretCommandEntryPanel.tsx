@@ -6,6 +6,7 @@ import {
   maskSubmittedCommands,
 } from '../core/localCommandEntry';
 import { Command, ParsedTeam } from '../core/types';
+import './SecretCommandEntryPanel.css';
 
 interface SecretCommandEntryPanelProps {
   phase: SecretEntryPhase;

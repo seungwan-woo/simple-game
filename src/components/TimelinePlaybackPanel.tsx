@@ -13,6 +13,9 @@ const commandLabel = (command: string): string => {
   return `${option.emoji} ${option.label}`;
 };
 
+const isAnimationEvent = (event: AnimationEvent | null | undefined): event is AnimationEvent =>
+  event !== null && event !== undefined;
+
 const describeAnimationEvent = (event: AnimationEvent): { title: string; body: string } => {
   switch (event.type) {
     case 'COMMAND_REVEAL':
@@ -41,24 +44,26 @@ const describeAnimationEvent = (event: AnimationEvent): { title: string; body: s
 export const TimelinePlaybackPanel = ({ timeline }: TimelinePlaybackPanelProps) => {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const timelineKey = useMemo(() => JSON.stringify(timeline), [timeline]);
+  const safeTimeline = useMemo(() => timeline.filter(isAnimationEvent), [timelineKey, timeline]);
 
   useEffect(() => {
-    if (timeline.length === 0) {
+    if (safeTimeline.length === 0) {
       setActiveStepIndex(-1);
       return undefined;
     }
 
     setActiveStepIndex(0);
     let elapsedMs = 0;
-    const timers = timeline.slice(1).map((event, index) => {
+    const timers = safeTimeline.slice(1).map((event, index) => {
       elapsedMs += event.delayMs;
       return window.setTimeout(() => setActiveStepIndex(index + 1), elapsedMs);
     });
 
     return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [timelineKey, timeline]);
+  }, [safeTimeline]);
 
-  const activeEvent = activeStepIndex >= 0 ? timeline[activeStepIndex] ?? null : null;
+  const activeEvent =
+    activeStepIndex >= 0 && activeStepIndex < safeTimeline.length ? safeTimeline[activeStepIndex] ?? null : null;
   const activeDescription = activeEvent === null ? null : describeAnimationEvent(activeEvent);
 
   return (
@@ -79,7 +84,7 @@ export const TimelinePlaybackPanel = ({ timeline }: TimelinePlaybackPanelProps) 
       </div>
 
       <ol className="timeline-steps">
-        {timeline.map((event, index) => {
+        {safeTimeline.map((event, index) => {
           const description = describeAnimationEvent(event);
           const state = index === activeStepIndex ? 'active' : index < activeStepIndex ? 'done' : 'pending';
           return (
