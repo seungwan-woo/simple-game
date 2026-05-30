@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   COMMAND_OPTIONS,
   SecretEntryPhase,
@@ -60,10 +60,23 @@ export const SecretCommandEntryPanel = ({
 }: SecretCommandEntryPanelProps) => {
   const isReady = phase === 'READY';
   const [selectedSlot, setSelectedSlot] = useState(0);
+  const visibleSlotCount = Math.max(0, Math.min(slotCount, draftCommands.length));
+  const lastEditableSlot = visibleSlotCount - 1;
+  const selectedSlotIndex = visibleSlotCount === 0 ? 0 : Math.min(Math.max(selectedSlot, 0), lastEditableSlot);
+  const selectedCommand = visibleSlotCount === 0 ? null : draftCommands[selectedSlotIndex] ?? null;
+
+  useEffect(() => {
+    setSelectedSlot((current) => {
+      if (visibleSlotCount === 0) return 0;
+      return Math.min(Math.max(current, 0), lastEditableSlot);
+    });
+  }, [lastEditableSlot, visibleSlotCount]);
 
   const handleCommandPick = (command: Command) => {
-    onChangeDraftCommand(selectedSlot, command);
-    setSelectedSlot((current) => Math.min(current + 1, slotCount - 1));
+    if (visibleSlotCount === 0) return;
+
+    onChangeDraftCommand(selectedSlotIndex, command);
+    setSelectedSlot(Math.min(selectedSlotIndex + 1, lastEditableSlot));
   };
 
   return (
@@ -85,12 +98,12 @@ export const SecretCommandEntryPanel = ({
       {!isReady && (
         <div className="fast-entry-shell">
           <div className="slot-strip" aria-label="7 command slots">
-            {draftCommands.slice(0, slotCount).map((command, index) => {
+            {draftCommands.slice(0, visibleSlotCount).map((command, index) => {
               const option = getCommandOption(command);
               return (
                 <button
                   key={`${command}-${index}`}
-                  className={`slot-chip ${selectedSlot === index ? 'selected' : ''}`}
+                  className={`slot-chip ${selectedSlotIndex === index ? 'selected' : ''}`}
                   onClick={() => setSelectedSlot(index)}
                   type="button"
                 >
@@ -106,7 +119,8 @@ export const SecretCommandEntryPanel = ({
             {COMMAND_OPTIONS.map((option) => (
               <button
                 key={option.command}
-                className={`command-card ${draftCommands[selectedSlot] === option.command ? 'active' : ''}`}
+                className={`command-card ${selectedCommand === option.command ? 'active' : ''}`}
+                disabled={visibleSlotCount === 0}
                 onClick={() => handleCommandPick(option.command)}
                 type="button"
               >

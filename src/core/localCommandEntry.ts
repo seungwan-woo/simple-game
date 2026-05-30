@@ -11,8 +11,16 @@ export interface CommandOption {
   hint: string;
 }
 
+const DEFAULT_COMMAND_OPTION: CommandOption = {
+  command: 'MID_ATTACK',
+  label: '중단 공격',
+  shortLabel: '중공',
+  emoji: '👊',
+  hint: '중단을 때립니다',
+};
+
 export const COMMAND_OPTIONS: CommandOption[] = [
-  { command: 'MID_ATTACK', label: '중단 공격', shortLabel: '중공', emoji: '👊', hint: '중단을 때립니다' },
+  DEFAULT_COMMAND_OPTION,
   { command: 'LOW_ATTACK', label: '하단 공격', shortLabel: '하공', emoji: '🦶', hint: '하단을 찌릅니다' },
   { command: 'MID_BLOCK', label: '중단 막기', shortLabel: '중막', emoji: '🛡️', hint: '중단 공격을 반격합니다' },
   { command: 'LOW_BLOCK', label: '하단 막기', shortLabel: '하막', emoji: '🧱', hint: '하단 공격을 반격합니다' },
@@ -23,7 +31,7 @@ export const COMMAND_OPTIONS: CommandOption[] = [
 const commandSet = new Set<Command>(COMMAND_OPTIONS.map(({ command }) => command));
 
 export const getCommandOption = (command: Command): CommandOption =>
-  COMMAND_OPTIONS.find((option) => option.command === command) ?? COMMAND_OPTIONS[0];
+  COMMAND_OPTIONS.find((option) => option.command === command) ?? DEFAULT_COMMAND_OPTION;
 
 export const createDefaultCommandDraft = (
   slotCount: number = GAME_SYSTEM_CONSTANTS.DEFAULT_TOTAL_COMMAND_SLOTS

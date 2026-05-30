@@ -51,11 +51,13 @@ const processBatchesSequentially = (
   batches: RawCsvRow[][],
   onChunkLoaded: (teams: ParsedTeam[]) => void
 ) =>
-  (index: number): T.Task<void> =>
-    index >= batches.length
+  (index: number): T.Task<void> => {
+    const batch = batches[index];
+
+    return batch === undefined
       ? T.of(undefined)
       : pipe(
-          batches[index],
+          batch,
           A.map(parseRowToTeam),
           (parsedBatch) => () => {
             onChunkLoaded(parsedBatch);
@@ -66,6 +68,7 @@ const processBatchesSequentially = (
           ),
           T.chain(() => processBatchesSequentially(batches, onChunkLoaded)(index + 1))
         );
+  };
 
 export const parseCsvProgressively = (
   rawRows: RawCsvRow[],

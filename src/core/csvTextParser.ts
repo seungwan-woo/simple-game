@@ -52,7 +52,13 @@ export const parseCsvText = (text: string): E.Either<Error, RawCsvRow[]> => {
     return E.left(new Error('CSV 내용이 비어 있습니다.'));
   }
 
-  const [headerLine, ...dataLines] = lines;
+  const headerLine = lines[0];
+
+  if (headerLine === undefined) {
+    return E.left(new Error('CSV 내용이 비어 있습니다.'));
+  }
+
+  const dataLines = lines.slice(1);
   const headers = splitCsvLine(headerLine).map((header) => header.trim());
 
   if (!headers.some(isSupportedTeamHeader)) {
