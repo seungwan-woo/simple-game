@@ -21,8 +21,8 @@ const DEFAULT_COMMAND_OPTION: CommandOption = {
 
 export const COMMAND_OPTIONS: CommandOption[] = [
   DEFAULT_COMMAND_OPTION,
-  { command: 'LOW_ATTACK', label: '하단 공격', shortLabel: '하공', emoji: '🦶', hint: '하단을 찌릅니다' },
   { command: 'MID_BLOCK', label: '중단 막기', shortLabel: '중막', emoji: '🛡️', hint: '중단 공격을 반격합니다' },
+  { command: 'LOW_ATTACK', label: '하단 공격', shortLabel: '하공', emoji: '🦶', hint: '하단을 찌릅니다' },
   { command: 'LOW_BLOCK', label: '하단 막기', shortLabel: '하막', emoji: '🧱', hint: '하단 공격을 반격합니다' },
   { command: 'CHARGE', label: '기 모으기', shortLabel: '기', emoji: '⚡', hint: '다음 공격을 강화합니다' },
   { command: 'THROW', label: '던지기', shortLabel: '잡기', emoji: '🤼', hint: '막기와 기 모으기를 깹니다' },

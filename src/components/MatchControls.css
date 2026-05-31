@@ -1,0 +1,9 @@
+.match-mode-grid {
+  grid-template-columns: minmax(220px, 420px);
+}
+
+@media (max-width: 760px) {
+  .match-mode-grid {
+    grid-template-columns: 1fr;
+  }
+}

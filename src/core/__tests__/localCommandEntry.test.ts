@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  COMMAND_OPTIONS,
   createDefaultCommandDraft,
   createLocalPlayerTeam,
   getNextSecretEntryPhase,
@@ -19,6 +20,17 @@ describe('Local secret command entry helpers', () => {
       'MID_BLOCK',
       'MID_BLOCK',
       'MID_BLOCK',
+    ]);
+  });
+
+  it('keeps command picker options in the local input order', () => {
+    expect(COMMAND_OPTIONS.map(({ command }) => command)).toEqual([
+      'MID_ATTACK',
+      'MID_BLOCK',
+      'LOW_ATTACK',
+      'LOW_BLOCK',
+      'CHARGE',
+      'THROW',
     ]);
   });
 

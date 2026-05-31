@@ -9,7 +9,6 @@ import { TimelinePlaybackPanel } from './components/TimelinePlaybackPanel';
 import { TurnEventPanel } from './components/TurnEventPanel';
 import { GAME_SYSTEM_CONSTANTS } from './core/constants';
 import { MATCH_MODE_CONFIGS, MatchWinner } from './core/matchSimulator';
-import { sampleTeams } from './data/sampleTeams';
 import { useGameStore } from './store/gameStore';
 
 const AUTO_PLAY_INTERVAL_MS = 2000;
@@ -41,12 +40,9 @@ export const App = () => {
   const [currentView, setCurrentView] = useState<AppView>('INPUT');
   const {
     gameState,
-    normalizedTeams,
     teamsLoadedCount,
     totalTeamsCount,
     isStreamingLoading,
-    selectedTeamAIndex,
-    selectedTeamBIndex,
     activeTeamA,
     activeTeamB,
     matchMode,
@@ -58,9 +54,6 @@ export const App = () => {
     secretPlayerA,
     secretPlayerB,
     importCsvData,
-    getImportedTeams,
-    selectTeamA,
-    selectTeamB,
     selectMatchMode,
     updateSecretDraftCommand,
     confirmSecretEntryPlayer,
@@ -89,7 +82,6 @@ export const App = () => {
     }
   }, [matchSummary.isFinished]);
 
-  const teams = getImportedTeams().length > 0 ? getImportedTeams() : sampleTeams;
   const modeConfig = MATCH_MODE_CONFIGS[matchMode];
   const displayWinner = matchSummary.isFinished ? winnerLabel(matchSummary.winner) : winnerLabel('UNDECIDED');
   const damageToA = latestTurnEvent?.damageToA ?? 0;
@@ -151,7 +143,7 @@ export const App = () => {
       <section className="hero page-hero">
         <p className="eyebrow">Code Striker</p>
         <h1>Set up the match</h1>
-        <p>Import teams, choose preset teams, or use local 2-player secret entry. Start the match when both players are ready.</p>
+        <p>Choose a match mode, enter both players' secret commands, then start the match when both players are ready.</p>
       </section>
 
       <CsvImportPanel
@@ -174,13 +166,8 @@ export const App = () => {
       />
 
       <MatchControls
-        teams={teams}
-        selectedTeamAIndex={selectedTeamAIndex}
-        selectedTeamBIndex={selectedTeamBIndex}
         matchMode={matchMode}
         isFinished={false}
-        onSelectTeamA={selectTeamA}
-        onSelectTeamB={selectTeamB}
         onSelectMode={selectMatchMode}
         onStart={handleStartPresetMatch}
         onStep={stepNextTurn}
@@ -194,7 +181,7 @@ export const App = () => {
     <>
       <section className="hero page-hero compact-hero">
         <p className="eyebrow">Battle Page</p>
-        <h1>{activeTeamA.teamName} vs {activeTeamB.teamName}</h1>
+        <h1>Battle in progress</h1>
         <p>Play turn by turn, run auto play, or jump to the result page when you want to review the outcome.</p>
         <div className="page-actions">
           <button className="ghost-button" onClick={goHome}>Back to Input</button>
@@ -226,16 +213,11 @@ export const App = () => {
           <span>Winner</span>
           <strong>{displayWinner}</strong>
         </div>
-        <div>
-          <span>Loaded Teams</span>
-          <strong>{normalizedTeams.teamIds.length}</strong>
-        </div>
       </section>
 
       <section className="arena">
         <PlayerPanel
           label="Player A"
-          teamName={activeTeamA.teamName}
           player={gameState.playerA}
           maxHp={modeConfig.initialHp}
           damageTaken={damageToA}
@@ -243,7 +225,6 @@ export const App = () => {
         />
         <PlayerPanel
           label="Player B"
-          teamName={activeTeamB.teamName}
           player={gameState.playerB}
           maxHp={modeConfig.initialHp}
           damageTaken={damageToB}
@@ -252,13 +233,8 @@ export const App = () => {
       </section>
 
       <MatchControls
-        teams={teams}
-        selectedTeamAIndex={selectedTeamAIndex}
-        selectedTeamBIndex={selectedTeamBIndex}
         matchMode={matchMode}
         isFinished={matchSummary.isFinished}
-        onSelectTeamA={selectTeamA}
-        onSelectTeamB={selectTeamB}
         onSelectMode={selectMatchMode}
         onStart={handleStartPresetMatch}
         onStep={stepNextTurn}
@@ -270,11 +246,11 @@ export const App = () => {
 
       <section className="queues">
         <div className="panel">
-          <h2>{activeTeamA.teamName} Base 7-Command Queue</h2>
+          <h2>Player A Base 7-Command Queue</h2>
           <CommandQueue commands={activeTeamA.commands.slice(0, INPUT_SLOT_COUNT)} activeTurn={gameState.turnIndex % INPUT_SLOT_COUNT} />
         </div>
         <div className="panel">
-          <h2>{activeTeamB.teamName} Base 7-Command Queue</h2>
+          <h2>Player B Base 7-Command Queue</h2>
           <CommandQueue commands={activeTeamB.commands.slice(0, INPUT_SLOT_COUNT)} activeTurn={gameState.turnIndex % INPUT_SLOT_COUNT} />
         </div>
       </section>
@@ -300,14 +276,12 @@ export const App = () => {
       <section className="arena">
         <PlayerPanel
           label="Player A"
-          teamName={activeTeamA.teamName}
           player={gameState.playerA}
           maxHp={modeConfig.initialHp}
           isWinner={matchSummary.isFinished && matchSummary.winner === 'A'}
         />
         <PlayerPanel
           label="Player B"
-          teamName={activeTeamB.teamName}
           player={gameState.playerB}
           maxHp={modeConfig.initialHp}
           isWinner={matchSummary.isFinished && matchSummary.winner === 'B'}
