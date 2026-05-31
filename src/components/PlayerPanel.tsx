@@ -3,7 +3,6 @@ import { HpBar } from './HpBar';
 
 interface PlayerPanelProps {
   label: string;
-  teamName: string;
   player: PlayerState;
   maxHp: number;
   damageTaken?: number;
@@ -12,15 +11,14 @@ interface PlayerPanelProps {
 
 export const PlayerPanel = ({
   label,
-  teamName,
   player,
   maxHp,
   damageTaken = 0,
   isWinner = false,
 }: PlayerPanelProps) => (
   <article className={`player-card battle-card ${damageTaken > 0 ? 'hit-shake' : ''} ${isWinner ? 'winner-glow' : ''}`}>
-    <p className="eyebrow">{label}</p>
-    <h2>{teamName}</h2>
+    <p className="eyebrow">Player Status</p>
+    <h2>{label}</h2>
     <div className="hp-stage">
       <HpBar hp={player.hp} maxHp={maxHp} />
       {damageTaken > 0 && <span key={`${label}-${player.hp}-${damageTaken}`} className="damage-pop">-{damageTaken}</span>}

@@ -119,13 +119,17 @@ export const SecretCommandEntryPanel = ({
               <button
                 key={option.command}
                 className={`command-card ${selectedCommand === option.command ? 'active' : ''}`}
+                aria-label={option.label}
                 disabled={visibleSlotCount === 0}
                 onClick={() => handleCommandPick(option.command)}
+                title={option.hint}
                 type="button"
               >
-                <span className="command-emoji">{option.emoji}</span>
-                <strong>{option.label}</strong>
-                <small>{option.hint}</small>
+                <span className="command-emoji" aria-hidden="true">{option.emoji}</span>
+                <span className="command-card-copy" aria-hidden="true">
+                  <strong className="command-label command-label-full">{option.label}</strong>
+                  <strong className="command-label command-label-short">{option.shortLabel}</strong>
+                </span>
               </button>
             ))}
           </div>

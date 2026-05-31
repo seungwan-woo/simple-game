@@ -34,8 +34,6 @@ interface GameStore {
   latestTurnEvent: TurnEvent | null;
   latestTimeline: AnimationEvent[];
   matchMode: MatchMode;
-  selectedTeamAIndex: number;
-  selectedTeamBIndex: number;
   activeTeamA: ParsedTeam;
   activeTeamB: ParsedTeam;
   matchSummary: MatchSummary;
@@ -44,10 +42,6 @@ interface GameStore {
   secretPlayerA: ParsedTeam | null;
   secretPlayerB: ParsedTeam | null;
   importCsvData: (rawRows: RawCsvRow[]) => Promise<void>;
-  getImportedTeams: () => ParsedTeam[];
-  loadSampleTeams: () => void;
-  selectTeamA: (index: number) => void;
-  selectTeamB: (index: number) => void;
   selectMatchMode: (mode: MatchMode) => void;
   updateSecretDraftCommand: (index: number, command: Command) => void;
   confirmSecretEntryPlayer: () => void;
@@ -57,7 +51,6 @@ interface GameStore {
   stepNextTurn: () => void;
   runCurrentMatchToEnd: () => void;
   modifyConfig: <K extends keyof TunableGameConfig>(key: K, value: TunableGameConfig[K]) => void;
-  resetArena: (teamA: ParsedTeam, teamB: ParsedTeam) => void;
 }
 
 const defaultMode: MatchMode = 'FIXED_TURN_REMAINING_HP';
@@ -92,23 +85,21 @@ const createInitialGameState = (maxHp: number): GameState => ({
 const createDefaultSummary = (state: GameState): MatchSummary =>
   createMatchSummary(state, MATCH_MODE_CONFIGS[defaultMode]);
 
-const getSelectedTeams = (normalizedTeams: NormalizedTeams, teamAIndex: number, teamBIndex: number) => {
+const getDefaultMatchTeams = (normalizedTeams: NormalizedTeams) => {
   const teams = selectTeams(normalizedTeams);
   return {
-    teamA: teams[teamAIndex] ?? defaultTeamA,
-    teamB: teams[teamBIndex] ?? defaultTeamB,
+    teamA: teams[0] ?? defaultTeamA,
+    teamB: teams[1] ?? teams[0] ?? defaultTeamB,
   };
 };
 
 const buildStartedState = (
   config: TunableGameConfig,
   normalizedTeams: NormalizedTeams,
-  teamAIndex: number,
-  teamBIndex: number,
   matchMode: MatchMode
 ) => {
   const modeConfig = MATCH_MODE_CONFIGS[matchMode];
-  const { teamA, teamB } = getSelectedTeams(normalizedTeams, teamAIndex, teamBIndex);
+  const { teamA, teamB } = getDefaultMatchTeams(normalizedTeams);
   const gameState = createGameStateForMatch(teamA, teamB, modeConfig);
 
   return {
@@ -146,7 +137,7 @@ const initialGameState = createInitialGameState(GAME_SYSTEM_CONSTANTS.DEFAULT_MA
 
 export const useGameStore = create<GameStore>()(
   devtools(
-    (set, get) => ({
+    (set) => ({
       gameState: initialGameState,
       config: defaultConfig,
       normalizedTeams: normalizeSampleTeams(),
@@ -156,8 +147,6 @@ export const useGameStore = create<GameStore>()(
       latestTurnEvent: null,
       latestTimeline: [],
       matchMode: defaultMode,
-      selectedTeamAIndex: 0,
-      selectedTeamBIndex: 1,
       activeTeamA: defaultTeamA,
       activeTeamB: defaultTeamB,
       matchSummary: createDefaultSummary(initialGameState),
@@ -171,8 +160,6 @@ export const useGameStore = create<GameStore>()(
           isStreamingLoading: true,
           normalizedTeams: emptyNormalizedTeams,
           teamsLoadedCount: 0,
-          selectedTeamAIndex: 0,
-          selectedTeamBIndex: rawRows.length > 1 ? 1 : 0,
         }, false, 'csv/start');
         const pipeline = parseCsvProgressively(rawRows, (chunkTeams) =>
           set((state) => {
@@ -191,19 +178,14 @@ export const useGameStore = create<GameStore>()(
 
         set((store) => ({
           isStreamingLoading: false,
-          ...buildStartedState(store.config, store.normalizedTeams, 0, rawRows.length > 1 ? 1 : 0, store.matchMode),
+          ...buildStartedState(store.config, store.normalizedTeams, store.matchMode),
         }), false, 'csv/complete');
       },
-      getImportedTeams: () => selectTeams(get().normalizedTeams),
-      loadSampleTeams: () =>
-        set({ normalizedTeams: normalizeSampleTeams(), teamsLoadedCount: sampleTeams.length, totalTeamsCount: sampleTeams.length }, false, 'teams/load_sample'),
-      selectTeamA: (index) => set({ selectedTeamAIndex: index }, false, 'match/select_team_a'),
-      selectTeamB: (index) => set({ selectedTeamBIndex: index }, false, 'match/select_team_b'),
       selectMatchMode: (mode) =>
         set((store) => ({
           matchMode: mode,
           secretDraftCommands: createDefaultCommandDraft(),
-          ...buildStartedState(store.config, store.normalizedTeams, store.selectedTeamAIndex, store.selectedTeamBIndex, mode),
+          ...buildStartedState(store.config, store.normalizedTeams, mode),
         }), false, 'match/select_mode'),
       updateSecretDraftCommand: (index, command) =>
         set((store) => ({ secretDraftCommands: setDraftCommand(store.secretDraftCommands, index, command) }), false, 'secret_entry/update_command'),
@@ -235,7 +217,7 @@ export const useGameStore = create<GameStore>()(
           secretPlayerB: null,
         }, false, 'secret_entry/reset'),
       startMatch: () =>
-        set((store) => buildStartedState(store.config, store.normalizedTeams, store.selectedTeamAIndex, store.selectedTeamBIndex, store.matchMode), false, 'match/start'),
+        set((store) => buildStartedState(store.config, store.normalizedTeams, store.matchMode), false, 'match/start'),
       stepNextTurn: () =>
         set((store) => {
           const modeConfig = MATCH_MODE_CONFIGS[store.matchMode];
@@ -265,20 +247,6 @@ export const useGameStore = create<GameStore>()(
         }, false, 'match/run_full'),
       modifyConfig: (key, value) =>
         set((store) => ({ config: { ...store.config, [key]: value } }), false, `config/modify_${String(key)}`),
-      resetArena: (teamA, teamB) =>
-        set((store) => {
-          const modeConfig = MATCH_MODE_CONFIGS[store.matchMode];
-          const gameState = createGameStateForMatch(teamA, teamB, modeConfig);
-          return {
-            gameState,
-            config: createConfigForMode(store.config, modeConfig),
-            activeTeamA: teamA,
-            activeTeamB: teamB,
-            latestTurnEvent: null,
-            latestTimeline: [],
-            matchSummary: createMatchSummary(gameState, modeConfig),
-          };
-        }, false, 'arena/reset'),
     }),
     { name: 'CodeStrikerContext' }
   )

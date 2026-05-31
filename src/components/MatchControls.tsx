@@ -1,14 +1,8 @@
 import { MatchMode } from '../core/matchSimulator';
-import { ParsedTeam } from '../core/types';
 
 interface MatchControlsProps {
-  teams: ParsedTeam[];
-  selectedTeamAIndex: number;
-  selectedTeamBIndex: number;
   matchMode: MatchMode;
   isFinished: boolean;
-  onSelectTeamA: (index: number) => void;
-  onSelectTeamB: (index: number) => void;
   onSelectMode: (mode: MatchMode) => void;
   onStart: () => void;
   onStep: () => void;
@@ -23,13 +17,8 @@ const modeLabels: Record<MatchMode, string> = {
 };
 
 export const MatchControls = ({
-  teams,
-  selectedTeamAIndex,
-  selectedTeamBIndex,
   matchMode,
   isFinished,
-  onSelectTeamA,
-  onSelectTeamB,
   onSelectMode,
   onStart,
   onStep,
@@ -37,23 +26,7 @@ export const MatchControls = ({
   onReset,
 }: MatchControlsProps) => (
   <section className="controls panel">
-    <div className="control-grid">
-      <label>
-        Team A
-        <select value={selectedTeamAIndex} onChange={(event) => onSelectTeamA(Number(event.target.value))}>
-          {teams.map((team, index) => (
-            <option key={team.teamName} value={index}>{team.teamName}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Team B
-        <select value={selectedTeamBIndex} onChange={(event) => onSelectTeamB(Number(event.target.value))}>
-          {teams.map((team, index) => (
-            <option key={team.teamName} value={index}>{team.teamName}</option>
-          ))}
-        </select>
-      </label>
+    <div className="control-grid match-mode-grid">
       <label>
         Match Mode
         <select value={matchMode} onChange={(event) => onSelectMode(event.target.value as MatchMode)}>
